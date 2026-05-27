@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 from src.db.session import Base, engine, SessionLocal
 from src.models.models import Category, Product, ProductType, Role, Branch, User, Supplier, Customer, Sale, SaleItem, SaleStatus, Payment, PaymentMethodType, CashSession
+from src.routes.auth import hash_password
 
 DEFAULT_CATEGORIES = [
     ('Comestibles de almacén', 'Productos secos, conservas, yerba, arroz, fideos y mercadería general'),
@@ -33,6 +34,13 @@ SAMPLE_PRODUCTS = [
 
 def seed():
     Base.metadata.create_all(bind=engine)
+    # Migración mínima para instalaciones existentes sin Alembic.
+    # Permite agregar contraseña a bases ya creadas.
+    with engine.begin() as conn:
+        try:
+            conn.exec_driver_sql("ALTER TABLE users ADD COLUMN password_hash VARCHAR DEFAULT ''")
+        except Exception:
+            pass
     db = SessionLocal()
     try:
         if not db.query(Branch).first():
@@ -42,8 +50,12 @@ def seed():
         if not db.query(Role).first():
             db.add_all([Role(name='Administrador', permissions='all'), Role(name='Cajero', permissions='sales,cash'), Role(name='Producción', permissions='inventory,manufacturing'), Role(name='Compras', permissions='purchases,suppliers')])
             db.commit()
-        if not db.query(User).first():
-            db.add(User(name='Administrador Deli Food', email='admin@delifood.local', role_id=db.query(Role).filter_by(name='Administrador').first().id, branch_id=branch.id))
+        admin_role = db.query(Role).filter_by(name='Administrador').first()
+        admin = db.query(User).filter(User.email == 'admin@delifood.local').first()
+        if not admin:
+            db.add(User(name='Administrador Deli Food', email='admin@delifood.local', password_hash=hash_password('admin123'), role_id=admin_role.id, branch_id=branch.id))
+        elif not admin.password_hash:
+            admin.password_hash = hash_password('admin123')
         if not db.query(Supplier).first():
             db.add_all([Supplier(name='Proveedor General', phone=''), Supplier(name='Distribuidora Bebidas', phone=''), Supplier(name='Frigorífico y Pollería', phone='')])
         if not db.query(Customer).first():

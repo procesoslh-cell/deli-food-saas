@@ -28,6 +28,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, default='')
     role_id = Column(Integer, ForeignKey('roles.id'))
     branch_id = Column(Integer, ForeignKey('branches.id'))
     active = Column(Boolean, default=True)
