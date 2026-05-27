@@ -77,3 +77,15 @@ def reset_password(user_id: int, payload: PasswordResetIn, db: Session = Depends
     user.password_hash = hash_password(payload.password)
     db.commit()
     return {'ok': True}
+
+
+@router.delete('/users/{user_id}')
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id, User.active == True).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='Usuario no encontrado')
+    if user.email == 'admin@delifood.local':
+        raise HTTPException(status_code=400, detail='No se puede eliminar el administrador inicial')
+    user.active = False
+    db.commit()
+    return {'ok': True}

@@ -50,3 +50,11 @@ http://localhost:5173
 
 ## Producción / nube
 Para subirlo a la nube, usar backend FastAPI + base PostgreSQL y frontend estático. Antes de exponerlo a clientes reales conviene activar autenticación JWT real, HTTPS, backups automáticos, variables de entorno y roles/permisos estrictos.
+
+
+## Usuario inicial
+
+Email: admin@delifood.local
+Contraseña: admin123
+
+Desde Usuarios y sucursales se pueden crear usuarios con contraseña, cambiar clave y eliminar usuarios.
